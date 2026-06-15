@@ -119,7 +119,6 @@ class AssetDetailViewModel(application: Application) : AndroidViewModel(applicat
             qtaAssetTotale -= transazione.TRAN_qta
         }
 
-
         val prezzoMedio = spesaTotaleReale / qtaAssetAcquistata
         val pnlValore = (prezzoCorrente.PRHI_prezzo - prezzoMedio) * asset.ASSE_qtaPosseduta
         // La percentuale di performance della posizione rimane identica

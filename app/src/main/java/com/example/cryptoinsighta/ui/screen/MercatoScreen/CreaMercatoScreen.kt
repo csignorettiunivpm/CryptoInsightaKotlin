@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.cryptoinsighta.viewmodel.PortafoglioViewModel
 
@@ -27,9 +28,12 @@ import com.example.cryptoinsighta.viewmodel.PortafoglioViewModel
 @Composable
 fun CreaMercatoScreen( onAggiungiClick: (Int) -> Unit, onClickRigaOpenDetailAsset: (Int) ->Unit) {
     val viewModel: PortafoglioViewModel = viewModel()
-    val assetsNonPosseduti by viewModel.assetsNonPosseduti.collectAsState()
-    val prezziCorrenti by viewModel.prezziCorrenti.collectAsState()
-    val pnlPercentuali by viewModel.pnlPercentuali.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+
+    val assetsNonPosseduti = uiState.assetsNonPosseduti
+    val prezziCorrenti = uiState.prezziCorrenti
+    val pnlPercentuali = uiState.pnlPercentuali
 
     Column(Modifier.fillMaxWidth().padding(16.dp)){
         Text(

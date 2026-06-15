@@ -63,7 +63,6 @@ fun CreaListaAssetsPosseduti (assetsPosseduti: List<Asset>, valoreAssetsAttuale:
                         .fillMaxWidth()
                         .heightIn(max = 400.dp)
                 ) {
-                    // PEZZO FONDAMENTALE: Usiamo 'items' anziché il forEach dentro un item
                     // gni riga verrà renderizzata SOLO quando entra nello schermo!
                     items(assetsPosseduti) { assetPosseduto ->
                         creaAssetRiga(

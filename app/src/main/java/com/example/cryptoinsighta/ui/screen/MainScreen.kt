@@ -98,7 +98,6 @@ fun  CreaMainScreen() {
                 route = Screen.AggiungiTransazione.route,
                 arguments = listOf(navArgument("assetId") { type = NavType.IntType })
             )
-
             { backStackEntry -> val idAssetRicevuto = backStackEntry.arguments?.getInt("assetId") ?: return@composable
 
                 CreaAggiungiTransazioneScreen(
@@ -114,9 +113,7 @@ fun  CreaMainScreen() {
             { backStackEntry -> val idAssetRicevuto = backStackEntry.arguments?.getInt("assetId") ?: return@composable
 
                 CreaDettaglioAssetScreen(
-                    assetId = idAssetRicevuto, onBackClick = { navController.popBackStack()}, onClickAggiungiTransazione = {
-                        navController.navigate("aggiungi_transazione/$idAssetRicevuto")
-                    }
+                    assetId = idAssetRicevuto, onBackClick = { navController.popBackStack()}, onClickAggiungiTransazione = { navController.navigate("aggiungi_transazione/$idAssetRicevuto") }
                 )
             }
         }

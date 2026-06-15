@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.appcompat)
     ksp("androidx.room:room-compiler:2.6.1")
 
     // WorkManager

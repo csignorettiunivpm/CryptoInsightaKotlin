@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -42,52 +43,29 @@ val assetsDiTest = listOf(
     Asset(ASSE_nome = "Meta Platforms Inc.", ASSE_ticker = "META", ASSE_iconURL = "", ASSE_qtaPosseduta = 0.0, ASSE_categoria = "Azione"),
     Asset(ASSE_nome = "Netflix Inc.", ASSE_ticker = "NFLX", ASSE_iconURL = "", ASSE_qtaPosseduta = 0.0, ASSE_categoria = "Azione")
 )
+data class PortafoglioUiState(
+    val assets: List<Asset> = emptyList(),
+    val assetsPosseduti: List<Asset> = emptyList(),
+    val assetsNonPosseduti: List<Asset> = emptyList(),
+    val prezziCorrenti: Map<Int, Double> = emptyMap(),
+    val pnlPercentuali: Map<Int, Double> = emptyMap(),
+    val valAssetPosseduto: Map<Int, Double> = emptyMap(),
+    val valoreTotale: Double = 0.0,
+    val pnlTotale: Double = 0.0,
+    val pnlPercentualeTotale: Double = 0.0,
+    val listaGiornoValorePortafoglio: List<PriceHistory> = emptyList()
+)
 @RequiresApi(Build.VERSION_CODES.O)
 class PortafoglioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = AssetRepository(application)
 
 
-    private val _assets = MutableStateFlow<List<Asset>>(emptyList())
-    val assets: StateFlow<List<Asset>> = _assets
+    private val _uiState = MutableStateFlow(PortafoglioUiState())
+    val uiState: StateFlow<PortafoglioUiState> = _uiState.asStateFlow()
 
-    private val _assetsPosseduti = MutableStateFlow<List<Asset>>(emptyList())
-    val assetsPosseduti: StateFlow<List<Asset>> = _assetsPosseduti
 
-    private val _assetsNonPosseduti = MutableStateFlow<List<Asset>>(emptyList())
-    val assetsNonPosseduti: StateFlow<List<Asset>> = _assetsNonPosseduti
 
-    // mappa assetId -> ultimo prezzo disponibile da api
-    //Questo è il pattern fondamentale dell'incapsulamento in Kotlin e serve a proteggere l'applicazione da bug
-    // il MutableStateFlow serve per dire che solo il viewModel può modificarne il contenuto
-    //lo StateFlow invece è pubblico non modificabile, Compose può leggerlo e rimanere in ascolto senza modificarlo per sbaglio
-
-    //I prezzi in tempo reale vengono salvati temporaneamente solo nella RAM del telefono dentro questa mappa _prezziCorrenti
-    private val _prezziCorrenti = MutableStateFlow<Map<Int, Double>>(emptyMap())
-    val prezziCorrenti: StateFlow<Map<Int, Double>> = _prezziCorrenti
-
-    //anche questi son tutti dati che mi cambiano dinamicamente in base ai prezzi attuali di mercato degli asset, quindi devo usare la stessa logica
-    // mappa assetId -> P&L %
-    private val _pnlPercentuali = MutableStateFlow<Map<Int, Double>>(emptyMap())
-    val pnlPercentuali: StateFlow<Map<Int, Double>> = _pnlPercentuali
-
-    private val _valAssetPosseduto = MutableStateFlow<Map<Int, Double>>(emptyMap())
-    val valAssetPosseduto: StateFlow<Map<Int, Double>> = _valAssetPosseduto
-
-    // valore totale portafoglio
-    private val _valoreTotale = MutableStateFlow(0.0)
-    val valoreTotale: StateFlow<Double> = _valoreTotale
-
-    // P&L totale portafoglio
-    private val _pnlTotale = MutableStateFlow(0.0)
-    val pnlTotale: StateFlow<Double> = _pnlTotale
-
-    // P&L % totale portafoglio
-    private val _pnlPercentualeTotale = MutableStateFlow(0.0)
-    val pnlPercentualeTotale: StateFlow<Double> = _pnlPercentualeTotale
-
-    private val _listaGiornoValorePortafoglio = MutableStateFlow<List<PriceHistory>>(emptyList())
-    val listaGiornoValorePortafoglio: StateFlow<List<PriceHistory>> = _listaGiornoValorePortafoglio
 
     //all'avvio del view model ci si mette in ascolto del DB e si popolano tutte le mappe sopra dichiarate che altrimenti sarebbero vuote
     init {
@@ -120,9 +98,13 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
     private suspend fun init() {
         val listaCompleta = repository.getAllAssets()
 
-        _assets.value = listaCompleta
-        _assetsPosseduti.value = listaCompleta.filter { it.ASSE_qtaPosseduta > 0.0 }
-        _assetsNonPosseduti.value = listaCompleta.filter { it.ASSE_qtaPosseduta == 0.0 }
+        _uiState.update { statoAttuale ->
+            statoAttuale.copy(
+                assets = listaCompleta,
+                assetsPosseduti = listaCompleta.filter { it.ASSE_qtaPosseduta > 0.0 },
+                assetsNonPosseduti = listaCompleta.filter { it.ASSE_qtaPosseduta == 0.0 }
+            )
+        }
 
 
         //assets.collect dice: "Ogni volta che la lista degli asset nel database cambia (o viene caricata per la prima volta),
@@ -194,7 +176,9 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
             lista.add(PriceHistory(0,0,valoreTotalePortafoglioQuelGiorno,transazione.TRAN_dataOra))
 
         }
-        _listaGiornoValorePortafoglio.value = lista
+        _uiState.update { statoAttuale ->
+            statoAttuale.copy(listaGiornoValorePortafoglio = lista)
+        }
 
     }
 
@@ -208,15 +192,10 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
         val prezzoAggiornato = repository.getLastPrice(asset.ASSE_Id)
 
         if(prezzoAggiornato != null){
-            _prezziCorrenti.update {  mappaCorrente ->
-
-                val nuovaMappa = mappaCorrente.toMutableMap()
-
-
+            _uiState.update { statoAttuale ->
+                val nuovaMappa = statoAttuale.prezziCorrenti.toMutableMap()
                 nuovaMappa[asset.ASSE_Id] = prezzoAggiornato.PRHI_prezzo
-
-
-                nuovaMappa
+                statoAttuale.copy(prezziCorrenti = nuovaMappa)
             }
             //adesso aggiorno le statistiche dell'asset
             aggiornaPnLAsset(asset, prezzoAggiornato)
@@ -254,15 +233,17 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
 
 
             // Ora aggiorniamo la mappa per la UI di Compose
-            _pnlPercentuali.update { mappaCorrente ->
-                val nuovaMappa = mappaCorrente.toMutableMap()
-                nuovaMappa[asset.ASSE_Id] = pnlPercentuale
-                nuovaMappa
-            }
-            _valAssetPosseduto.update { mappaCorrente ->
-                val nuovaMappa = mappaCorrente.toMutableMap()
-                nuovaMappa[asset.ASSE_Id] = pnlMonetarioSulleQuoteRimaste
-                nuovaMappa
+            _uiState.update { statoAttuale ->
+                val nuovaMappaPnl = statoAttuale.pnlPercentuali.toMutableMap()
+                val nuovaMappaValori = statoAttuale.valAssetPosseduto.toMutableMap()
+
+                nuovaMappaPnl[asset.ASSE_Id] = pnlPercentuale
+                nuovaMappaValori[asset.ASSE_Id] = pnlMonetarioSulleQuoteRimaste
+
+                statoAttuale.copy(
+                    pnlPercentuali = nuovaMappaPnl,
+                    valAssetPosseduto = nuovaMappaValori
+                )
             }
         }else{
 
@@ -275,10 +256,10 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
             }
 
 
-            _pnlPercentuali.update { mappaCorrente ->
-                val nuovaMappa = mappaCorrente.toMutableMap()
-                nuovaMappa[asset.ASSE_Id] = pnlPercentuale
-                nuovaMappa
+            _uiState.update { statoAttuale ->
+                val nuovaMappaPnl = statoAttuale.pnlPercentuali.toMutableMap()
+                nuovaMappaPnl[asset.ASSE_Id] = pnlPercentuale
+                statoAttuale.copy(pnlPercentuali = nuovaMappaPnl)
             }
         }
 
@@ -292,7 +273,7 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
 
 
         listaAssets.forEach { asset ->
-            val prezzoCorrente = _prezziCorrenti.value[asset.ASSE_Id] ?: 0.0
+            val prezzoCorrente = _uiState.value.prezziCorrenti[asset.ASSE_Id] ?: 0.0
 
 
             val transactions = repository.getTransactionsByAsset(asset.ASSE_Id)
@@ -300,11 +281,15 @@ class PortafoglioViewModel(application: Application) : AndroidViewModel(applicat
             totaleAttualePortafoglio += (prezzoCorrente * asset.ASSE_qtaPosseduta) + (transactions.filter { it.TRAN_tipo == "SELL" }.sumOf { it.TRAN_qta * it.TRAN_prezzoUnitario })
             totaleInvestito += transactions.filter { it.TRAN_tipo == "BUY" }.sumOf { it.TRAN_qta * it.TRAN_prezzoUnitario }
         }
-        _valoreTotale.value = totaleAttualePortafoglio
-        _pnlTotale.value = totaleAttualePortafoglio - totaleInvestito
-        _pnlPercentualeTotale.value = if (totaleInvestito > 0)
-            ((totaleAttualePortafoglio - totaleInvestito) / totaleInvestito) * 100 else 0.0
-
+        val calcoloPnlTotale = totaleAttualePortafoglio - totaleInvestito
+        val calcoloPnlPercentualeTotale = if (totaleInvestito > 0) (calcoloPnlTotale / totaleInvestito) * 100 else 0.0
+        _uiState.update { statoAttuale ->
+            statoAttuale.copy(
+                valoreTotale = totaleAttualePortafoglio,
+                pnlTotale = calcoloPnlTotale,
+                pnlPercentualeTotale = calcoloPnlPercentualeTotale
+            )
+        }
     }
 
     fun onClickEliminaAsset(asset: Asset) {

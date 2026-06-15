@@ -31,8 +31,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun priceHistoryDao(): PriceHistoryDao
     abstract fun priceAlertDao(): PriceAlertDao
 
-    //companion object, mi fa da pattern singleton, ossia mi garantisce che ci sia una sola istanza
-    //del db ad ogni esecuzione dell'app
+    //companion object E’ un object ma dentro una classe,
+    // a cui io posso accedere facendo AppDatabase.getInstance (senza oggetto)
     companion object {
         @Volatile       //volatile fa si che INSTANCE (l'istanza del DB) sia sempre aggiornata tra i thread
         private var INSTANCE: AppDatabase? = null

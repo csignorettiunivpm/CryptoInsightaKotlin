@@ -295,12 +295,14 @@ fun CreaAggiungiTransazioneScreen(assetId:Int, onBackClick: () -> Unit){
                 DatePickerDialog(
                     onDismissRequest = { showDatePicker = false },
                     confirmButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
+                        TextButton(onClick = { showDatePicker = false })
+                        {
                             Text("OK")
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
+                        TextButton(onClick = { showDatePicker = false })
+                        {
                             Text("Annulla")
                         }
                     }
