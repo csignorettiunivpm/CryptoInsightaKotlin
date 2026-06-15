@@ -1,5 +1,6 @@
 package com.example.cryptoinsighta.repository
 
+import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.util.Log
@@ -16,7 +17,7 @@ import com.example.cryptoinsighta.model.modelsFinanceAPI.PrezzoDTO
 import com.example.cryptoinsighta.viewmodel.TransactionHistoryViewModel
 
 
-class AssetRepository(context: Context) {
+class AssetRepository(context: Application) {
     private val db = AppDatabase.getInstance(context)
     private val priceHistoryDao: PriceHistoryDao = db.priceHistoryDao()
     private val transactionDao = db.transactionDao()

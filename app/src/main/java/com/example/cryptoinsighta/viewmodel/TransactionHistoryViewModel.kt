@@ -21,7 +21,7 @@ class TransactionHistoryViewModel(application: Application) : AndroidViewModel(a
 
     fun loadTransazioni(){
         viewModelScope.launch {
-            _listaTransazioni.value = withContext(Dispatchers.IO){ repository.getAllTransactionsWithTicker()}
+            _listaTransazioni.value = repository.getAllTransactionsWithTicker()
         }
     }
 

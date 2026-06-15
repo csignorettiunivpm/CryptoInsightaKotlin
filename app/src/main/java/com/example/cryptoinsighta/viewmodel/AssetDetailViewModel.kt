@@ -62,19 +62,17 @@ class AssetDetailViewModel(application: Application) : AndroidViewModel(applicat
         viewModelScope.launch {
             try {
                 // Con context Recupero l'asset dal DB in modo asincrono
-                val assetRecuperato = withContext(Dispatchers.IO) {
-                    repository.getAssetById(assetId)
-                }
+                val assetRecuperato = repository.getAssetById(assetId)
+
                 _asset.value = assetRecuperato
-                _listaTransazioniAsset.value = withContext(Dispatchers.IO){ repository.getTransactionsByAsset(assetId)}
-                _listaAvvisi.value = withContext(Dispatchers.IO){repository.getAlertsByAssetId(assetId)}
+                _listaTransazioniAsset.value =  repository.getTransactionsByAsset(assetId)
+                _listaAvvisi.value = repository.getAlertsByAssetId(assetId)
                 Log.d("appl", "${_listaTransazioniAsset.value}")
 
 
                 // Recupera la lista dei prezzi come lista normale
-                val listaPrezzi = withContext(Dispatchers.IO) {
-                    repository.getPriceHistoryByAsset(assetRecuperato.ASSE_Id)
-                }
+                val listaPrezzi = repository.getPriceHistoryByAsset(assetRecuperato.ASSE_Id)
+
 
                 _prezziDisponibiliAsset.value = listaPrezzi
                 Log.d("appl", "Prezzi caricati dal DB: ${listaPrezzi.size} elementi per l'asset $assetId")

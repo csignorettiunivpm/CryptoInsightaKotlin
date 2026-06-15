@@ -33,6 +33,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     //companion object E’ un object ma dentro una classe,
     // a cui io posso accedere facendo AppDatabase.getInstance (senza oggetto)
+    // e essendo che non puoi chiamare il metodo getInstance sugli oggetti, per via del companion
+    // allora lo potrai chiamare solo sulla classe AppDatabase -> rendendolo di fatto Singleton
     companion object {
         @Volatile       //volatile fa si che INSTANCE (l'istanza del DB) sia sempre aggiornata tra i thread
         private var INSTANCE: AppDatabase? = null
