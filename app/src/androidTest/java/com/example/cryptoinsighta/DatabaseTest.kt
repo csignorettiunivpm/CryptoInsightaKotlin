@@ -18,6 +18,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.IOException
 
 @RunWith(AndroidJUnit4::class)
 class DatabaseTest {
@@ -40,6 +41,7 @@ class DatabaseTest {
     }
 
     @After
+    @Throws(IOException::class)
     fun closeDb() {
         // Chiude il database temporaneo liberando la memoria della RAM
         db.clearAllTables()
@@ -47,6 +49,7 @@ class DatabaseTest {
     }
 
     @Test
+    @Throws(Exception::class)
     fun writeAndReadAsset() = runBlocking {
         val nuovoAsset = Asset(ASSE_nome = "Bitcoin", ASSE_ticker = "BTC-EUR", ASSE_iconURL = "", ASSE_qtaPosseduta = 0.0, ASSE_categoria = "Crypto")
 
