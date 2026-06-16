@@ -17,8 +17,8 @@ import com.example.cryptoinsighta.model.PriceAlertWithTicker
 class PriceAlertWorker(context: Context, workerParams: WorkerParameters): CoroutineWorker(context, workerParams) {
     private val database = Room.databaseBuilder(
         applicationContext,
-        AppDatabase::class.java, // <-- Cambia "AppDatabase" con il nome della tua classe del Database
-        "cryptoinsighta_db" // <-- Metti il nome del file del tuo database (es. "crypto_database")
+        AppDatabase::class.java,
+        "cryptoinsighta_db"
     ).build()
 
     private val priceAlertDao = database.priceAlertDao()
